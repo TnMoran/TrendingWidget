@@ -1,0 +1,5 @@
+{
+  "name": "X Trending Widget",
+  "description": "A mobile-first widget to discover trending tweets and topics from X, powered by AI.",
+  "requestFramePermissions": []
+}
