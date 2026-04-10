@@ -1,6 +1,18 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+function getAI() {
+  if (!aiInstance) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "undefined") {
+      // Return null or throw a specific error that we can catch
+      return null;
+    }
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+}
 
 export interface TrendingTopic {
   topic: string;
@@ -25,6 +37,13 @@ export interface TrendingData {
 }
 
 export async function getTrendingData(): Promise<TrendingData> {
+  const ai = getAI();
+  
+  if (!ai) {
+    console.warn("GEMINI_API_KEY is missing. Using fallback data.");
+    return getFallbackData();
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -73,25 +92,40 @@ export async function getTrendingData(): Promise<TrendingData> {
     return data as TrendingData;
   } catch (error) {
     console.error("Error fetching trending data:", error);
-    // Fallback data
-    return {
-      topics: [
-        { topic: "#SpaceX", volume: "125K posts", category: "Technology" },
-        { topic: "Champions League", volume: "89K posts", category: "Sports" },
-        { topic: "New AI Model", volume: "45K posts", category: "Tech" },
-      ],
-      tweets: [
-        {
-          id: "1",
-          authorName: "Tech Insider",
-          authorHandle: "@techinsider",
-          content: "The new AI breakthroughs we're seeing this week are absolutely mind-blowing. The pace of innovation is accelerating. 🚀 #AI #Tech",
-          timestamp: "2h ago",
-          likes: "12.5K",
-          retweets: "2.1K",
-          avatarUrl: "https://picsum.photos/seed/tech/100/100"
-        }
-      ]
-    };
+    return getFallbackData();
   }
+}
+
+function getFallbackData(): TrendingData {
+  return {
+    topics: [
+      { topic: "#SpaceX", volume: "125K posts", category: "Technology" },
+      { topic: "Champions League", volume: "89K posts", category: "Sports" },
+      { topic: "New AI Model", volume: "45K posts", category: "Tech" },
+      { topic: "Vercel Deploy", volume: "12K posts", category: "Tech" },
+      { topic: "Gemini AI", volume: "67K posts", category: "AI" },
+    ],
+    tweets: [
+      {
+        id: "1",
+        authorName: "Tech Insider",
+        authorHandle: "@techinsider",
+        content: "The new AI breakthroughs we're seeing this week are absolutely mind-blowing. The pace of innovation is accelerating. 🚀 #AI #Tech",
+        timestamp: "2h ago",
+        likes: "12.5K",
+        retweets: "2.1K",
+        avatarUrl: "https://picsum.photos/seed/tech/100/100"
+      },
+      {
+        id: "2",
+        authorName: "Web Dev Daily",
+        authorHandle: "@webdevdaily",
+        content: "Deploying to Vercel is so smooth, but don't forget to set your environment variables! 🛠️ #WebDev #Vercel",
+        timestamp: "4h ago",
+        likes: "8.2K",
+        retweets: "1.5K",
+        avatarUrl: "https://picsum.photos/seed/web/100/100"
+      }
+    ]
+  };
 }

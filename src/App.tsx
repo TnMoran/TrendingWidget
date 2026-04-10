@@ -23,12 +23,19 @@ export default function App() {
   const [clickCount, setClickCount] = useState(0);
   const [showAd, setShowAd] = useState(false);
   const [isWidgetMode, setIsWidgetMode] = useState(false);
+  const [isKeyMissing, setIsKeyMissing] = useState(false);
 
   useEffect(() => {
     // Check if we are in widget mode via URL param
     const params = new URLSearchParams(window.location.search);
     if (params.get('mode') === 'widget') {
       setIsWidgetMode(true);
+    }
+
+    // Check if API key is missing (for UI warning)
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "undefined") {
+      setIsKeyMissing(true);
     }
   }, []);
 
@@ -108,6 +115,20 @@ export default function App() {
       isWidgetMode ? "p-2 justify-center" : "p-4 md:p-8"
     )}>
       <div className="w-full max-w-md space-y-6">
+        {/* API Key Warning */}
+        {isKeyMissing && !isWidgetMode && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3 items-start">
+            <Info className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-amber-900">Configuración incompleta</p>
+              <p className="text-xs text-amber-800 leading-relaxed">
+                Falta la variable de entorno <code className="bg-amber-100 px-1 rounded">GEMINI_API_KEY</code> en Vercel. 
+                La app está usando datos de prueba. Configúrala en el dashboard de Vercel para ver tendencias reales.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Header - Hidden in widget mode */}
         {!isWidgetMode && (
           <header className="flex items-center justify-between px-2">
